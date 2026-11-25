@@ -1,6 +1,18 @@
 Wolfenstein 3D
 ==============
 
+RetroRaycaster desktop demo
+---------------------------
+
+Open ``RetroRaycaster.sln`` in Visual Studio 2022 with the .NET 8 desktop
+development workload. In Solution Explorer, right-click
+``RetroRaycaster.Desktop``, choose **Set as Startup Project**, and press F5.
+Use W/S to move forward and backward, A/D to strafe, the left and right
+arrow keys to turn, and Esc to close the demo.
+
+Original source release
+-----------------------
+
 The original source release was made using the ``DEICE.EXE``
 installer (DeIce) in the root directory.  (Basically a way to
 split self-extracting zip files over multiple floppy disks.)

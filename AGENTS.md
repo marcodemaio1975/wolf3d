@@ -17,3 +17,17 @@ dotnet restore RetroRaycaster.sln
 dotnet build RetroRaycaster.sln -c Release --no-restore
 dotnet test RetroRaycaster.sln -c Release --no-build
 ```
+
+## Destinazione delle pull request
+
+Crea ogni pull request all’interno del fork `marcodemaio1975/wolf3d`
+con queste impostazioni:
+
+- Base repository: `marcodemaio1975/wolf3d`
+- Base branch: `master`
+- Head repository: `marcodemaio1975/wolf3d`
+- Compare branch: il branch del task, ad esempio `feature/software-renderer`
+
+Prima di creare la PR, verifica che sia il repository di origine sia quello
+di destinazione siano `marcodemaio1975/wolf3d`. Apri una PR verso
+`id-Software/wolf3d` solo su mia richiesta esplicita.

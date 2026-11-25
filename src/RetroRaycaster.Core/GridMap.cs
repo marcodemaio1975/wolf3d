@@ -14,6 +14,8 @@ public sealed class GridMap
     public int Width => solid.GetLength(1);
     public int Height => solid.GetLength(0);
 
+    internal bool IsSolid(int x, int y) => solid[y, x];
+
     /// <param name="solidCells">Rows indexed by [y, x]. True denotes a wall.</param>
     public GridMap(bool[,] solidCells)
     {

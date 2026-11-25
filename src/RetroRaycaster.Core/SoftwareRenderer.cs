@@ -44,8 +44,9 @@ public static class SoftwareRenderer
         {
             double offset = 2 * (x + 0.5) / width - 1;
             // The forward component stays one, so T measures perpendicular depth.
-            var hit = map.CastRay(cameraX, cameraY, forwardX + offset * planeX,
-                forwardY + offset * planeY);
+            double rayX = forwardX + offset * planeX;
+            double rayY = forwardY + offset * planeY;
+            var hit = map.CastRay(cameraX, cameraY, rayX, rayY);
             if (hit is not RayHit wall)
                 continue;
 
@@ -54,9 +55,32 @@ public static class SoftwareRenderer
             // Include row centers in the half-open interval [top, bottom).
             int top = (int)Math.Ceiling(horizon - halfWall - 0.5);
             int bottom = (int)Math.Ceiling(horizon + halfWall - 0.5);
-            uint color = wall.Side == WallSide.Vertical ? VerticalWallColor : HorizontalWallColor;
+            bool vertical = wall.Side == WallSide.Vertical;
+            var texture = map.TextureAtWall(wall.CellX, wall.CellY);
+            if (texture is null)
+            {
+                uint color = vertical ? VerticalWallColor : HorizontalWallColor;
+                for (int y = top; y < bottom; y++)
+                    pixels[y * width + x] = color;
+                continue;
+            }
+
+            double along = vertical ? cameraY + rayY * wall.T : cameraX + rayX * wall.T;
+            int u = Math.Min(texture.Width - 1, (int)((along - Math.Floor(along)) * texture.Width));
+            // U increases to the viewer's right when facing each wall head-on.
+            if (vertical ? rayX < 0 : rayY > 0)
+                u = texture.Width - 1 - u;
+
+            // T / focalLength is the inverse *unclipped* projected wall height.
+            // At T = 0 the visible strip samples the middle of the texture.
+            double inverseHeight = wall.T / focalLength;
             for (int y = top; y < bottom; y++)
-                pixels[y * width + x] = color;
+            {
+                double v = 0.5 + (y + 0.5 - horizon) * inverseHeight;
+                int row = Math.Clamp((int)(v * texture.Height), 0, texture.Height - 1);
+                uint color = texture[row, u];
+                pixels[y * width + x] = vertical ? color : (color & 0xFF000000u) | ((color & 0x00FEFEFEu) >> 1);
+            }
         }
     }
 }

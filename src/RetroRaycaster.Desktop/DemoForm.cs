@@ -40,7 +40,8 @@ internal sealed class DemoForm : Form
         KeyDown += (_, e) =>
         {
             if (e.KeyCode == Keys.Escape) Close();
-            else pressed.Add(e.KeyCode);
+            else if (pressed.Add(e.KeyCode) && e.KeyCode == Keys.E)
+                map.TryToggleDoor(player);
         };
         KeyUp += (_, e) => pressed.Remove(e.KeyCode);
         Deactivate += (_, _) => pressed.Clear();

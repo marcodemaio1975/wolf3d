@@ -8,12 +8,16 @@ Open ``RetroRaycaster.sln`` in Visual Studio 2022 with the .NET 8 desktop
 development workload. In Solution Explorer, right-click
 ``RetroRaycaster.Desktop``, choose **Set as Startup Project**, and press F5.
 Use W/S to move forward and backward, A/D to strafe, the left and right
-arrow keys to turn, and Esc to close the demo.
+arrow keys to turn, and Esc to close the demo. From the starting position,
+press E to open the wooden door straight ahead. Walk through with W, clear
+the threshold, turn around and press E again to close it.
 
 Edit ``src/RetroRaycaster.Desktop/Levels/demo.json`` to change the level.
 Build and publish copy it to ``Levels/demo.json`` beside the executable.
 The ``rows`` array lists equal-length strings from top to bottom:
-``.`` is empty, ``B`` is brick, and ``M`` is metal. The ``spawn`` object
+``.`` is empty, ``B`` is brick, ``M`` is metal and ``D`` is an initially
+closed door. E toggles the first door in sight within 1.5 grid units.
+An occupied doorway stays open. The ``spawn`` object
 sets ``x`` and ``y`` in grid units (right and down) and ``angleDegrees``
 clockwise from east. The player's circle must fit in free space.
 

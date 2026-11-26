@@ -12,10 +12,12 @@ public sealed class GridMap
 {
     private readonly int[,] materials;
     private readonly WallTexture[] textures = [];
+    // Door cells retain their material ID. A negative ID denotes an open door.
+    private readonly int doorMaterial;
     public int Width => materials.GetLength(1);
     public int Height => materials.GetLength(0);
 
-    internal bool IsSolid(int x, int y) => materials[y, x] != 0;
+    internal bool IsSolid(int x, int y) => materials[y, x] > 0;
     internal WallTexture? TextureAtWall(int x, int y) =>
         textures.Length == 0 ? null : textures[materials[y, x] - 1];
 
@@ -33,13 +35,16 @@ public sealed class GridMap
     }
 
     /// <summary>Zero denotes empty space. Positive IDs select textures starting at one.</summary>
-    public GridMap(int[,] materialIds, WallTexture[] textures)
+    public GridMap(int[,] materialIds, WallTexture[] textures) : this(materialIds, textures, 0) { }
+
+    internal GridMap(int[,] materialIds, WallTexture[] textures, int doorMaterial)
     {
         ArgumentNullException.ThrowIfNull(materialIds);
         ArgumentNullException.ThrowIfNull(textures);
         if (materialIds.Length == 0)
             throw new ArgumentException("The grid must contain at least one cell.", nameof(materialIds));
         materials = (int[,])materialIds.Clone();
+        this.doorMaterial = doorMaterial;
         this.textures = (WallTexture[])textures.Clone();
         foreach (var texture in this.textures)
             ArgumentNullException.ThrowIfNull(texture);
@@ -54,7 +59,26 @@ public sealed class GridMap
     /// The origin belongs to cell (floor(x), floor(y)) and must be empty if inside.
     /// At a corner the ray enters only the diagonal cell and reports its vertical side.
     /// </summary>
-    public RayHit? CastRay(double originX, double originY, double directionX, double directionY)
+    public RayHit? CastRay(double originX, double originY, double directionX, double directionY) =>
+        Trace(originX, originY, directionX, directionY, double.PositiveInfinity, includeOpenDoors: false);
+
+    /// <summary>Toggles the first visible door within 1.5 grid units of the player.</summary>
+    public bool TryToggleDoor(PlayerState player)
+    {
+        if (doorMaterial == 0) return false;
+        var (dy, dx) = Math.SinCos(player.Angle);
+        var hit = Trace(player.X, player.Y, dx, dy, 1.5, includeOpenDoors: true);
+        if (hit is not RayHit cell) return false;
+        int id = materials[cell.CellY, cell.CellX];
+        if (Math.Abs(id) != doorMaterial) return false;
+        if (id < 0 && PlayerMovement.OverlapsCell(player.X, player.Y, cell.CellX, cell.CellY))
+            return false;
+        materials[cell.CellY, cell.CellX] = -id;
+        return true;
+    }
+
+    private RayHit? Trace(double originX, double originY, double directionX, double directionY,
+        double maxDistance, bool includeOpenDoors)
     {
         if (!double.IsFinite(originX) || !double.IsFinite(originY) ||
             !double.IsFinite(directionX) || !double.IsFinite(directionY))
@@ -68,6 +92,8 @@ public sealed class GridMap
         int y = (int)originY;
         if (IsSolid(x, y))
             throw new ArgumentException("A moving ray must start in an empty cell.");
+        // The occupied doorway is the first door and cannot be closed.
+        if (includeOpenDoors && materials[y, x] < 0) return null;
 
         int stepX = Math.Sign(directionX);
         int stepY = Math.Sign(directionY);
@@ -79,12 +105,13 @@ public sealed class GridMap
             bool crossX = stepX != 0 && (stepY == 0 || nextX <= nextY);
             bool crossY = stepY != 0 && (stepX == 0 || nextY <= nextX);
             double t = crossX ? nextX : nextY;
+            if (t > maxDistance) return null;
 
             if (crossX) x += stepX;
             if (crossY) y += stepY;
             if (x < 0 || x >= Width || y < 0 || y >= Height)
                 return null;
-            if (IsSolid(x, y))
+            if (IsSolid(x, y) || (includeOpenDoors && materials[y, x] < 0))
                 return new RayHit(x, y, crossX ? WallSide.Vertical : WallSide.Horizontal, t);
 
             // Compute from the original ray to avoid accumulating rounding at corners.

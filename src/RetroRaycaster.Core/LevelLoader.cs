@@ -43,14 +43,38 @@ public static class LevelLoader
                     '.' => 0,
                     'B' => 1,
                     'M' => 2,
+                    'D' => DoorMaterial,
                     var symbol => throw new JsonException($"Unknown symbol '{symbol}' at row {y + 1}, column {x + 1}.")
                 };
 
-        var map = new GridMap(cells, [brick, metal]);
+        var map = new GridMap(cells, [brick, metal, DoorTexture], DoorMaterial);
         if (!PlayerMovement.CanStandAt(map, spawn.X, spawn.Y))
             throw new JsonException("The spawn circle must fit inside the map without overlapping a wall.");
         if (!double.IsFinite(spawn.AngleDegrees))
             throw new JsonException("spawn.angleDegrees must be finite.");
         return (map, new PlayerState(spawn.X, spawn.Y, spawn.AngleDegrees * (Math.PI / 180)));
+    }
+
+    private const int DoorMaterial = 3;
+    private static readonly WallTexture DoorTexture = CreateDoorTexture();
+
+    private static WallTexture CreateDoorTexture()
+    {
+        var pixels = new uint[32, 32];
+        for (int y = 0; y < 32; y++)
+            for (int x = 0; x < 32; x++)
+            {
+                // A timber door with a dark frame, cross braces and a brass latch.
+                pixels[y, x] = (x, y) switch
+                {
+                    (< 2 or >= 30, _) or (_, < 2 or >= 30) => 0xFF41352D,
+                    (>= 23 and <= 27, >= 15 and <= 17) => 0xFFFFCC52,
+                    (_, 6 or 7 or 24 or 25) => 0xFF564337,
+                    _ when x % 6 == 2 => 0xFF774827,
+                    _ when (x / 6) % 2 == 0 => 0xFFC28345,
+                    _ => 0xFFAD703D
+                };
+            }
+        return new WallTexture(pixels);
     }
 }

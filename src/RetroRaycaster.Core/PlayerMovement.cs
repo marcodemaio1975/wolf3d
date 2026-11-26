@@ -59,13 +59,18 @@ public static class PlayerMovement
 
         for (int row = (int)(y - Radius); row <= Math.Min(map.Height - 1, (int)(y + Radius)); row++)
         {
-            if (y <= row - Radius || y >= row + 1 + Radius) continue;
-            double reach = ReachAtRow(y, row);
             for (int col = (int)(x - Radius); col <= Math.Min(map.Width - 1, (int)(x + Radius)); col++)
-                if (map.IsSolid(col, row) && x > col - reach && x < col + 1 + reach)
+                if (map.IsSolid(col, row) && OverlapsCell(x, y, col, row))
                     return false;
         }
         return true;
+    }
+
+    internal static bool OverlapsCell(double x, double y, int col, int row)
+    {
+        if (y <= row - Radius || y >= row + 1 + Radius) return false;
+        double reach = ReachAtRow(y, row);
+        return x > col - reach && x < col + 1 + reach;
     }
 
     // At a corner only this cross-section of the circle reaches the wall.

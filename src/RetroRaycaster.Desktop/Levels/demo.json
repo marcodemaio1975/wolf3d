@@ -1,0 +1,14 @@
+{
+  "rows": [
+    "BBBBBBBBBBBBBBB",
+    "B.............B",
+    "B.....MM......B",
+    "B.....MM......B",
+    "B.........BBB.B",
+    "BBBBBBBBBBB.B.B",
+    "B...........B.B",
+    "B.............B",
+    "BBBBBBBBBBBBBBB"
+  ],
+  "spawn": { "x": 2.5, "y": 3.5, "angleDegrees": 0 }
+}

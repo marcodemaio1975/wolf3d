@@ -15,8 +15,8 @@ internal sealed class DemoForm : Form
     private const int FrameWidth = 320;
     private const int FrameHeight = 200;
     private const double HorizontalFov = 70 * Math.PI / 180;
-    private readonly GridMap map = CreateMap();
-    private PlayerState player = new(2.5, 3.5, 0);
+    private readonly GridMap map;
+    private PlayerState player;
     private readonly HashSet<Keys> pressed = new();
     private readonly Timer timer = new() { Interval = 16 };
     private readonly Stopwatch clock = new();
@@ -25,8 +25,10 @@ internal sealed class DemoForm : Form
     private readonly uint[] pixels = GC.AllocateArray<uint>(FrameWidth * FrameHeight, pinned: true);
     private readonly Bitmap frame;
 
-    public DemoForm()
+    public DemoForm(GridMap map, PlayerState spawn)
     {
+        this.map = map;
+        player = spawn;
         frame = new Bitmap(FrameWidth, FrameHeight, FrameWidth * sizeof(uint),
             PixelFormat.Format32bppArgb, Marshal.UnsafeAddrOfPinnedArrayElement(pixels, 0));
         Text = "RetroRaycaster";
@@ -95,26 +97,5 @@ internal sealed class DemoForm : Form
             GC.KeepAlive(pixels);
         }
         base.Dispose(disposing);
-    }
-
-    private static GridMap CreateMap()
-    {
-        string[] rows =
-        [
-            "###############",
-            "#.............#",
-            "#.....MM......#",
-            "#.....MM......#",
-            "#.........###.#",
-            "###########.#.#",
-            "#...........#.#",
-            "#.............#",
-            "###############"
-        ];
-        var walls = new int[rows.Length, rows[0].Length];
-        for (int y = 0; y < rows.Length; y++)
-            for (int x = 0; x < rows[y].Length; x++)
-                walls[y, x] = rows[y][x] switch { '#' => 1, 'M' => 2, _ => 0 };
-        return new GridMap(walls, [DemoTextures.Brick, DemoTextures.Metal]);
     }
 }

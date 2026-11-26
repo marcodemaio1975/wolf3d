@@ -10,6 +10,13 @@ development workload. In Solution Explorer, right-click
 Use W/S to move forward and backward, A/D to strafe, the left and right
 arrow keys to turn, and Esc to close the demo.
 
+Edit ``src/RetroRaycaster.Desktop/Levels/demo.json`` to change the level.
+Build and publish copy it to ``Levels/demo.json`` beside the executable.
+The ``rows`` array lists equal-length strings from top to bottom:
+``.`` is empty, ``B`` is brick, and ``M`` is metal. The ``spawn`` object
+sets ``x`` and ``y`` in grid units (right and down) and ``angleDegrees``
+clockwise from east. The player's circle must fit in free space.
+
 Original source release
 -----------------------
 

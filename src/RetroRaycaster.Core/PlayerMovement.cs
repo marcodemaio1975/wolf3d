@@ -51,6 +51,30 @@ public static class PlayerMovement
 
     private static bool ValidAxis(double value) => value is >= -1 and <= 1;
 
+    internal static bool CanStandAt(GridMap map, double x, double y)
+    {
+        if (!double.IsFinite(x) || !double.IsFinite(y) ||
+            x < Radius || x > map.Width - Radius || y < Radius || y > map.Height - Radius)
+            return false;
+
+        for (int row = (int)(y - Radius); row <= Math.Min(map.Height - 1, (int)(y + Radius)); row++)
+        {
+            if (y <= row - Radius || y >= row + 1 + Radius) continue;
+            double reach = ReachAtRow(y, row);
+            for (int col = (int)(x - Radius); col <= Math.Min(map.Width - 1, (int)(x + Radius)); col++)
+                if (map.IsSolid(col, row) && x > col - reach && x < col + 1 + reach)
+                    return false;
+        }
+        return true;
+    }
+
+    // At a corner only this cross-section of the circle reaches the wall.
+    private static double ReachAtRow(double across, int row)
+    {
+        double gap = Math.Max(0, Math.Max(row - across, across - (row + 1)));
+        return Math.Sqrt(Math.Max(0, Radius * Radius - gap * gap));
+    }
+
     private static double MoveAxis(GridMap map, double position, double across, double delta, bool horizontal)
     {
         if (delta == 0) return position;
@@ -64,9 +88,7 @@ public static class PlayerMovement
         for (int row = firstRow; row <= lastRow; row++)
         {
             if (across <= row - Radius || across >= row + 1 + Radius) continue;
-            double gap = Math.Max(0, Math.Max(row - across, across - (row + 1)));
-            // At a corner only this cross-section of the circle reaches the wall.
-            double reach = Math.Sqrt(Math.Max(0, Radius * Radius - gap * gap));
+            double reach = ReachAtRow(across, row);
             for (int cell = first; cell <= last; cell++)
             {
                 if (!(horizontal ? map.IsSolid(cell, row) : map.IsSolid(row, cell))) continue;

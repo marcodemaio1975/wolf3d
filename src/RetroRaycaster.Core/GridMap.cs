@@ -10,11 +10,14 @@ public readonly record struct RayHit(int CellX, int CellY, WallSide Side, double
 /// <summary>A grid of unit cells. X increases rightward and Y downward.</summary>
 public sealed class GridMap
 {
-    private readonly bool[,] solid;
-    public int Width => solid.GetLength(1);
-    public int Height => solid.GetLength(0);
+    private readonly int[,] materials;
+    private readonly WallTexture[] textures = [];
+    public int Width => materials.GetLength(1);
+    public int Height => materials.GetLength(0);
 
-    internal bool IsSolid(int x, int y) => solid[y, x];
+    internal bool IsSolid(int x, int y) => materials[y, x] != 0;
+    internal WallTexture? TextureAtWall(int x, int y) =>
+        textures.Length == 0 ? null : textures[materials[y, x] - 1];
 
     /// <param name="solidCells">Rows indexed by [y, x]. True denotes a wall.</param>
     public GridMap(bool[,] solidCells)
@@ -23,7 +26,26 @@ public sealed class GridMap
         if (solidCells.GetLength(0) == 0 || solidCells.GetLength(1) == 0)
             throw new ArgumentException("The grid must contain at least one row and column.", nameof(solidCells));
 
-        solid = (bool[,])solidCells.Clone();
+        materials = new int[solidCells.GetLength(0), solidCells.GetLength(1)];
+        for (int y = 0; y < Height; y++)
+            for (int x = 0; x < Width; x++)
+                materials[y, x] = solidCells[y, x] ? 1 : 0;
+    }
+
+    /// <summary>Zero denotes empty space. Positive IDs select textures starting at one.</summary>
+    public GridMap(int[,] materialIds, WallTexture[] textures)
+    {
+        ArgumentNullException.ThrowIfNull(materialIds);
+        ArgumentNullException.ThrowIfNull(textures);
+        if (materialIds.Length == 0)
+            throw new ArgumentException("The grid must contain at least one cell.", nameof(materialIds));
+        materials = (int[,])materialIds.Clone();
+        this.textures = (WallTexture[])textures.Clone();
+        foreach (var texture in this.textures)
+            ArgumentNullException.ThrowIfNull(texture);
+        foreach (int id in materials)
+            if (id < 0 || id > textures.Length)
+                throw new ArgumentOutOfRangeException(nameof(materialIds), "Unknown material ID.");
     }
 
     /// <summary>
@@ -44,7 +66,7 @@ public sealed class GridMap
 
         int x = (int)originX;
         int y = (int)originY;
-        if (solid[y, x])
+        if (IsSolid(x, y))
             throw new ArgumentException("A moving ray must start in an empty cell.");
 
         int stepX = Math.Sign(directionX);
@@ -62,7 +84,7 @@ public sealed class GridMap
             if (crossY) y += stepY;
             if (x < 0 || x >= Width || y < 0 || y >= Height)
                 return null;
-            if (solid[y, x])
+            if (IsSolid(x, y))
                 return new RayHit(x, y, crossX ? WallSide.Vertical : WallSide.Horizontal, t);
 
             // Compute from the original ray to avoid accumulating rounding at corners.

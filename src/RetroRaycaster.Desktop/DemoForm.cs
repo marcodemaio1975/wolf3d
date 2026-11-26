@@ -103,18 +103,18 @@ internal sealed class DemoForm : Form
         [
             "###############",
             "#.............#",
-            "#.....##......#",
-            "#.....##......#",
+            "#.....MM......#",
+            "#.....MM......#",
             "#.........###.#",
             "###########.#.#",
             "#...........#.#",
             "#.............#",
             "###############"
         ];
-        var walls = new bool[rows.Length, rows[0].Length];
+        var walls = new int[rows.Length, rows[0].Length];
         for (int y = 0; y < rows.Length; y++)
             for (int x = 0; x < rows[y].Length; x++)
-                walls[y, x] = rows[y][x] == '#';
-        return new GridMap(walls);
+                walls[y, x] = rows[y][x] switch { '#' => 1, 'M' => 2, _ => 0 };
+        return new GridMap(walls, [DemoTextures.Brick, DemoTextures.Metal]);
     }
 }

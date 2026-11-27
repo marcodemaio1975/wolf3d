@@ -25,6 +25,11 @@ internal sealed class DemoForm : Form
     private readonly uint[] pixels = GC.AllocateArray<uint>(FrameWidth * FrameHeight, pinned: true);
     private readonly Bitmap frame;
     private readonly double[] wallDepths = new double[FrameWidth];
+    private readonly Label energyIndicator = new()
+    {
+        AutoSize = true, ForeColor = Color.White, BackColor = Color.Black,
+        Location = new Point(8, 8), Padding = new Padding(4, 2, 4, 2)
+    };
 
     public DemoForm(GridMap map, PlayerState spawn)
     {
@@ -37,6 +42,9 @@ internal sealed class DemoForm : Form
         BackColor = Color.Black;
         DoubleBuffered = true;
         ResizeRedraw = true;
+        energyIndicator.Visible = map.TotalEnergyCells > 0;
+        Controls.Add(energyIndicator);
+        UpdateEnergyIndicator();
 
         KeyDown += (_, e) =>
         {
@@ -53,6 +61,7 @@ internal sealed class DemoForm : Form
             var input = new MovementInput(Axis(Keys.W, Keys.S), Axis(Keys.D, Keys.A),
                 Axis(Keys.Right, Keys.Left));
             player = PlayerMovement.Update(map, player, input, dt);
+            if (map.CollectEnergyCells(player)) UpdateEnergyIndicator();
             RenderFrame();
         };
         Shown += (_, _) =>
@@ -75,6 +84,9 @@ internal sealed class DemoForm : Form
             FrameWidth, FrameHeight, pixels, wallDepths);
         Invalidate();
     }
+
+    private void UpdateEnergyIndicator() =>
+        energyIndicator.Text = $"Energia: {map.CollectedEnergyCells}/{map.TotalEnergyCells}";
 
     protected override void OnPaint(PaintEventArgs e)
     {

@@ -60,13 +60,16 @@ public static class LevelLoader
         for (int i = 0; i < entries.Length; i++)
         {
             var entry = entries[i] ?? throw new JsonException($"Expected an object at objects[{i}].");
-            if (entry.Type != "signalLamp")
-                throw new JsonException($"Unknown type '{entry.Type}' at objects[{i}].");
             if (!double.IsFinite(entry.X) || !double.IsFinite(entry.Y) ||
                 entry.X < 0 || entry.X >= width || entry.Y < 0 || entry.Y >= rows.Length ||
                 cells[(int)entry.Y, (int)entry.X] != 0)
                 throw new JsonException($"objects[{i}] must have finite coordinates in a floor cell.");
-            objects[i] = WorldSprite.SignalLamp(entry.X, entry.Y);
+            objects[i] = entry.Type switch
+            {
+                "signalLamp" => WorldSprite.SignalLamp(entry.X, entry.Y),
+                "energyCell" => WorldSprite.EnergyCell(entry.X, entry.Y),
+                _ => throw new JsonException($"Unknown type '{entry.Type}' at objects[{i}].")
+            };
         }
         var map = new GridMap(cells, [brick, metal, DoorTexture], DoorMaterial, objects);
         if (!PlayerMovement.CanStandAt(map, spawn.X, spawn.Y))

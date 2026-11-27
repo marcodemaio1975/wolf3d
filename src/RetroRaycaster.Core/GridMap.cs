@@ -15,7 +15,9 @@ public sealed class GridMap
     // Door cells retain their material ID. A negative ID denotes an open door.
     private readonly int doorMaterial;
     private readonly WorldSprite[] objects = [];
-    public ReadOnlySpan<WorldSprite> Objects => objects;
+    public int TotalEnergyCells { get; }
+    public int CollectedEnergyCells { get; private set; }
+    public ReadOnlySpan<WorldSprite> Objects => objects.AsSpan(0, objects.Length - CollectedEnergyCells);
     public int Width => materials.GetLength(1);
     public int Height => materials.GetLength(0);
 
@@ -48,12 +50,34 @@ public sealed class GridMap
         materials = (int[,])materialIds.Clone();
         this.doorMaterial = doorMaterial;
         this.objects = objects ?? [];
+        foreach (var sprite in this.objects)
+            if (sprite.IsEnergyCell) TotalEnergyCells++;
         this.textures = (WallTexture[])textures.Clone();
         foreach (var texture in this.textures)
             ArgumentNullException.ThrowIfNull(texture);
         foreach (int id in materials)
             if (id < 0 || id > textures.Length)
                 throw new ArgumentOutOfRangeException(nameof(materialIds), "Unknown material ID.");
+    }
+
+    /// <summary>Removes energy cells in the grid cell containing the player's center.</summary>
+    public bool CollectEnergyCells(PlayerState player)
+    {
+        if (CollectedEnergyCells == TotalEnergyCells) return false;
+        double cellX = Math.Floor(player.X);
+        double cellY = Math.Floor(player.Y);
+        var active = Objects;
+        int kept = 0;
+        for (int i = 0; i < active.Length; i++)
+        {
+            var sprite = active[i];
+            if (sprite.IsEnergyCell && Math.Floor(sprite.X) == cellX && Math.Floor(sprite.Y) == cellY)
+                continue;
+            if (kept != i) objects[kept] = sprite;
+            kept++;
+        }
+        CollectedEnergyCells += active.Length - kept;
+        return kept != active.Length;
     }
 
     /// <summary>

@@ -21,9 +21,11 @@ An occupied doorway stays open. The ``spawn`` object
 sets ``x`` and ``y`` in grid units (right and down) and ``angleDegrees``
 clockwise from east. The player's circle must fit in free space.
 
-The optional ``objects`` array places decorations in floor cells using world
-coordinates. You can walk through them. The demo places a signal lamp just
-beyond the door with ``"objects": [{"type": "signalLamp", "x": 5.5, "y": 3.5}]``.
+The optional ``objects`` array places sprites in floor cells using world
+coordinates, for example ``"objects": [{"type": "energyCell", "x": 3.5, "y": 3.5}]``.
+A ``signalLamp`` is decorative. An ``energyCell`` is collected automatically
+when the player's center enters its grid cell from any direction. The energy
+counter shows collected cells out of the level total. Reloading restores them.
 
 Original source release
 -----------------------

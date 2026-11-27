@@ -14,6 +14,8 @@ public sealed class GridMap
     private readonly WallTexture[] textures = [];
     // Door cells retain their material ID. A negative ID denotes an open door.
     private readonly int doorMaterial;
+    private readonly WorldSprite[] objects = [];
+    public ReadOnlySpan<WorldSprite> Objects => objects;
     public int Width => materials.GetLength(1);
     public int Height => materials.GetLength(0);
 
@@ -37,7 +39,7 @@ public sealed class GridMap
     /// <summary>Zero denotes empty space. Positive IDs select textures starting at one.</summary>
     public GridMap(int[,] materialIds, WallTexture[] textures) : this(materialIds, textures, 0) { }
 
-    internal GridMap(int[,] materialIds, WallTexture[] textures, int doorMaterial)
+    internal GridMap(int[,] materialIds, WallTexture[] textures, int doorMaterial, WorldSprite[]? objects = null)
     {
         ArgumentNullException.ThrowIfNull(materialIds);
         ArgumentNullException.ThrowIfNull(textures);
@@ -45,6 +47,7 @@ public sealed class GridMap
             throw new ArgumentException("The grid must contain at least one cell.", nameof(materialIds));
         materials = (int[,])materialIds.Clone();
         this.doorMaterial = doorMaterial;
+        this.objects = objects ?? [];
         this.textures = (WallTexture[])textures.Clone();
         foreach (var texture in this.textures)
             ArgumentNullException.ThrowIfNull(texture);

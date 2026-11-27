@@ -21,6 +21,10 @@ An occupied doorway stays open. The ``spawn`` object
 sets ``x`` and ``y`` in grid units (right and down) and ``angleDegrees``
 clockwise from east. The player's circle must fit in free space.
 
+The optional ``objects`` array places decorations in floor cells using world
+coordinates. You can walk through them. The demo places a signal lamp just
+beyond the door with ``"objects": [{"type": "signalLamp", "x": 5.5, "y": 3.5}]``.
+
 Original source release
 -----------------------
 

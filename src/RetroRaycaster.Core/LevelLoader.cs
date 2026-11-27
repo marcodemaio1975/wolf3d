@@ -11,6 +11,14 @@ public static class LevelLoader
     {
         [JsonPropertyName("rows")] public required string?[]? Rows { get; init; }
         [JsonPropertyName("spawn")] public required SpawnData? Spawn { get; init; }
+        [JsonPropertyName("objects")] public ObjectData?[]? Objects { get; init; } = [];
+    }
+
+    private sealed class ObjectData
+    {
+        [JsonPropertyName("type")] public required string Type { get; init; }
+        [JsonPropertyName("x")] public required double X { get; init; }
+        [JsonPropertyName("y")] public required double Y { get; init; }
     }
 
     private sealed class SpawnData
@@ -47,7 +55,20 @@ public static class LevelLoader
                     var symbol => throw new JsonException($"Unknown symbol '{symbol}' at row {y + 1}, column {x + 1}.")
                 };
 
-        var map = new GridMap(cells, [brick, metal, DoorTexture], DoorMaterial);
+        var entries = level.Objects ?? throw new JsonException("Expected an objects array.");
+        var objects = new WorldSprite[entries.Length];
+        for (int i = 0; i < entries.Length; i++)
+        {
+            var entry = entries[i] ?? throw new JsonException($"Expected an object at objects[{i}].");
+            if (entry.Type != "signalLamp")
+                throw new JsonException($"Unknown type '{entry.Type}' at objects[{i}].");
+            if (!double.IsFinite(entry.X) || !double.IsFinite(entry.Y) ||
+                entry.X < 0 || entry.X >= width || entry.Y < 0 || entry.Y >= rows.Length ||
+                cells[(int)entry.Y, (int)entry.X] != 0)
+                throw new JsonException($"objects[{i}] must have finite coordinates in a floor cell.");
+            objects[i] = WorldSprite.SignalLamp(entry.X, entry.Y);
+        }
+        var map = new GridMap(cells, [brick, metal, DoorTexture], DoorMaterial, objects);
         if (!PlayerMovement.CanStandAt(map, spawn.X, spawn.Y))
             throw new JsonException("The spawn circle must fit inside the map without overlapping a wall.");
         if (!double.IsFinite(spawn.AngleDegrees))

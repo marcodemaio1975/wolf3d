@@ -10,5 +10,8 @@
     "B.............B",
     "BBBBBBBBBBBBBBB"
   ],
-  "spawn": { "x": 2.5, "y": 3.5, "angleDegrees": 0 }
+  "spawn": { "x": 2.5, "y": 3.5, "angleDegrees": 0 },
+  "objects": [
+    { "type": "signalLamp", "x": 5.5, "y": 3.5 }
+  ]
 }

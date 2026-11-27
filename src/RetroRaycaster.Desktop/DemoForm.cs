@@ -24,6 +24,7 @@ internal sealed class DemoForm : Form
     // GDI+ reads the Core's packed ARGB pixels directly from this stable address.
     private readonly uint[] pixels = GC.AllocateArray<uint>(FrameWidth * FrameHeight, pinned: true);
     private readonly Bitmap frame;
+    private readonly double[] wallDepths = new double[FrameWidth];
 
     public DemoForm(GridMap map, PlayerState spawn)
     {
@@ -71,7 +72,7 @@ internal sealed class DemoForm : Form
     private void RenderFrame()
     {
         SoftwareRenderer.Render(map, player.X, player.Y, player.Angle, HorizontalFov,
-            FrameWidth, FrameHeight, pixels);
+            FrameWidth, FrameHeight, pixels, wallDepths);
         Invalidate();
     }
 

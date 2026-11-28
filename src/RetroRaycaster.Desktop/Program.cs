@@ -12,23 +12,31 @@ internal static class Program
     private static void Main()
     {
         ApplicationConfiguration.Initialize();
-        if (LoadLevel() is { } level)
-            Application.Run(new DemoForm(level.Map, level.Spawn));
+        try
+        {
+            var campaign = ReadFile("campaign.json", Campaign.ReadManifest);
+            Application.Run(new DemoForm(campaign));
+        }
+        catch (IOException ex)
+        {
+            MessageBox.Show(ex.Message, "RetroRaycaster", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
     }
 
-    internal static (GridMap Map, PlayerState Spawn)? LoadLevel()
+    internal static (GridMap Map, PlayerState Spawn) LoadLevel(string filename) =>
+        ReadFile(filename, file => LevelLoader.Load(file, DemoTextures.Brick, DemoTextures.Metal));
+
+    private static T ReadFile<T>(string filename, Func<Stream, T> read)
     {
-        string path = Path.Combine(AppContext.BaseDirectory, "Levels", "demo.json");
+        string path = Path.Combine(AppContext.BaseDirectory, "Levels", filename);
         try
         {
             using var file = File.OpenRead(path);
-            return LevelLoader.Load(file, DemoTextures.Brick, DemoTextures.Metal);
+            return read(file);
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or ArgumentException or NotSupportedException)
         {
-            MessageBox.Show($"Could not load the level from {path}\n\n{ex.Message}",
-                "RetroRaycaster", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return null;
+            throw new IOException($"Could not load {path}\n\n{ex.Message}", ex);
         }
     }
 }

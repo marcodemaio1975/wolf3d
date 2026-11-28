@@ -12,8 +12,11 @@ arrow keys to turn, and Esc to close the demo. From the starting position,
 press E to open the wooden door straight ahead. Walk through with W, clear
 the threshold, turn around and press E again to close it.
 
-Edit ``src/RetroRaycaster.Desktop/Levels/demo.json`` to change the level.
-Build and publish copy it to ``Levels/demo.json`` beside the executable.
+Edit the JSON files in ``src/RetroRaycaster.Desktop/Levels/`` to change the
+campaign. Build and publish copy them to ``Levels/`` beside the executable.
+The order in ``campaign.json`` is the play order. For example, to add a third
+level, place ``tower.json`` in that directory and set the manifest to
+``{"levels": ["demo.json", "relay.json", "tower.json"]}``.
 The ``rows`` array lists equal-length strings from top to bottom:
 ``.`` is empty, ``B`` is brick, ``M`` is metal and ``D`` is an initially
 closed door. E toggles the first door in sight within 1.5 grid units.
@@ -31,7 +34,9 @@ A level can include one optional exit, for example
 ``{"type": "levelExit", "x": 2.5, "y": 7.5}`` in ``objects``. Collect every
 energy cell to light the portal, then enter its grid cell to finish. With
 zero energy cells the portal starts active. Levels without an exit allow
-continued exploration. After completion press R to replay or Esc to quit.
+continued exploration. After completion press Enter to advance, R to replay
+the current level, or Esc to quit. On the last level, Enter starts a fresh
+campaign and R replays the last level.
 
 Original source release
 -----------------------

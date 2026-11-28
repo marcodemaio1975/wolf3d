@@ -1,0 +1,21 @@
+{
+  "rows": [
+    "MMMMMMMMMMMMM",
+    "M.....M.....M",
+    "M.....M.BBB.M",
+    "M.....D.....M",
+    "M.....M.B.B.M",
+    "M.MM..M.....M",
+    "M.....M.....M",
+    "MMMMMMMMMMMMM"
+  ],
+  "spawn": { "x": 2.5, "y": 3.5, "angleDegrees": 0 },
+  "objects": [
+    { "type": "signalLamp", "x": 4.5, "y": 2.5 },
+    { "type": "signalLamp", "x": 4.5, "y": 4.5 },
+    { "type": "energyCell", "x": 4.5, "y": 3.5 },
+    { "type": "energyCell", "x": 2.5, "y": 6.5 },
+    { "type": "energyCell", "x": 11.5, "y": 1.5 },
+    { "type": "levelExit", "x": 9.5, "y": 6.5 }
+  ]
+}

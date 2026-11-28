@@ -27,6 +27,12 @@ A ``signalLamp`` is decorative. An ``energyCell`` is collected automatically
 when the player's center enters its grid cell from any direction. The energy
 counter shows collected cells out of the level total. Reloading restores them.
 
+A level can include one optional exit, for example
+``{"type": "levelExit", "x": 2.5, "y": 7.5}`` in ``objects``. Collect every
+energy cell to light the portal, then enter its grid cell to finish. With
+zero energy cells the portal starts active. Levels without an exit allow
+continued exploration. After completion press R to replay or Esc to quit.
+
 Original source release
 -----------------------
 

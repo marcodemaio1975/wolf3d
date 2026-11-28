@@ -4,11 +4,29 @@ public readonly record struct WorldSprite(double X, double Y, double Height, Wal
 {
     private static readonly WallTexture LampTexture = CreateLampTexture();
     private static readonly WallTexture CellTexture = CreateCellTexture();
+    private static readonly WallTexture DormantExitTexture = CreateExitTexture(0xFF805642);
+    internal static readonly WallTexture ActiveExitTexture = CreateExitTexture(0xFF80FF75);
     internal bool IsEnergyCell { get; private init; }
 
     internal static WorldSprite SignalLamp(double x, double y) => new(x, y, 0.75, LampTexture);
+    internal static WorldSprite LevelExit(double x, double y) => new(x, y, 0.95, DormantExitTexture);
     internal static WorldSprite EnergyCell(double x, double y) =>
         new(x, y, 0.42, CellTexture) { IsEnergyCell = true };
+
+    private static WallTexture CreateExitTexture(uint light)
+    {
+        var pixels = new uint[28, 24];
+        for (int y = 0; y < 28; y++)
+            for (int x = 0; x < 24; x++)
+                pixels[y, x] = (x, y) switch
+                {
+                    (>= 7 and <= 16, 2 or 3) or (3 or 20, >= 7 and <= 22) => light,
+                    (>= 2 and <= 21, >= 1 and <= 5) or (>= 2 and <= 5 or >= 18 and <= 21, >= 6) => 0xFF555B76,
+                    (>= 1 and <= 22, >= 26) => 0xFF8D92AC,
+                    _ => 0
+                };
+        return new WallTexture(pixels);
+    }
 
     private static WallTexture CreateCellTexture()
     {

@@ -57,6 +57,7 @@ public static class LevelLoader
 
         var entries = level.Objects ?? throw new JsonException("Expected an objects array.");
         var objects = new WorldSprite[entries.Length];
+        int exitIndex = -1;
         for (int i = 0; i < entries.Length; i++)
         {
             var entry = entries[i] ?? throw new JsonException($"Expected an object at objects[{i}].");
@@ -68,10 +69,13 @@ public static class LevelLoader
             {
                 "signalLamp" => WorldSprite.SignalLamp(entry.X, entry.Y),
                 "energyCell" => WorldSprite.EnergyCell(entry.X, entry.Y),
+                "levelExit" when exitIndex >= 0 => throw new JsonException($"Second levelExit at objects[{i}]. Only one exit is allowed."),
+                "levelExit" => WorldSprite.LevelExit(entry.X, entry.Y),
                 _ => throw new JsonException($"Unknown type '{entry.Type}' at objects[{i}].")
             };
+            if (entry.Type == "levelExit") exitIndex = i;
         }
-        var map = new GridMap(cells, [brick, metal, DoorTexture], DoorMaterial, objects);
+        var map = new GridMap(cells, [brick, metal, DoorTexture], DoorMaterial, objects, exitIndex);
         if (!PlayerMovement.CanStandAt(map, spawn.X, spawn.Y))
             throw new JsonException("The spawn circle must fit inside the map without overlapping a wall.");
         if (!double.IsFinite(spawn.AngleDegrees))

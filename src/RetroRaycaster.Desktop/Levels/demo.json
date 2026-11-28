@@ -14,6 +14,7 @@
   "objects": [
     { "type": "signalLamp", "x": 5.5, "y": 3.5 },
     { "type": "energyCell", "x": 3.5, "y": 3.5 },
-    { "type": "energyCell", "x": 8.5, "y": 2.5 }
+    { "type": "energyCell", "x": 8.5, "y": 2.5 },
+    { "type": "levelExit", "x": 2.5, "y": 7.5 }
   ]
 }

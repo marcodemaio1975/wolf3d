@@ -15,6 +15,9 @@ public sealed class GridMap
     // Door cells retain their material ID. A negative ID denotes an open door.
     private readonly int doorMaterial;
     private readonly WorldSprite[] objects = [];
+    private int exitIndex = -1;
+    public bool IsExitActive => exitIndex >= 0 && CollectedEnergyCells == TotalEnergyCells;
+    public bool IsCompleted { get; private set; }
     public int TotalEnergyCells { get; }
     public int CollectedEnergyCells { get; private set; }
     public ReadOnlySpan<WorldSprite> Objects => objects.AsSpan(0, objects.Length - CollectedEnergyCells);
@@ -41,7 +44,8 @@ public sealed class GridMap
     /// <summary>Zero denotes empty space. Positive IDs select textures starting at one.</summary>
     public GridMap(int[,] materialIds, WallTexture[] textures) : this(materialIds, textures, 0) { }
 
-    internal GridMap(int[,] materialIds, WallTexture[] textures, int doorMaterial, WorldSprite[]? objects = null)
+    internal GridMap(int[,] materialIds, WallTexture[] textures, int doorMaterial, WorldSprite[]? objects = null,
+        int exitIndex = -1)
     {
         ArgumentNullException.ThrowIfNull(materialIds);
         ArgumentNullException.ThrowIfNull(textures);
@@ -50,8 +54,10 @@ public sealed class GridMap
         materials = (int[,])materialIds.Clone();
         this.doorMaterial = doorMaterial;
         this.objects = objects ?? [];
+        this.exitIndex = exitIndex;
         foreach (var sprite in this.objects)
             if (sprite.IsEnergyCell) TotalEnergyCells++;
+        if (IsExitActive) LightExit();
         this.textures = (WallTexture[])textures.Clone();
         foreach (var texture in this.textures)
             ArgumentNullException.ThrowIfNull(texture);
@@ -74,10 +80,25 @@ public sealed class GridMap
             if (sprite.IsEnergyCell && Math.Floor(sprite.X) == cellX && Math.Floor(sprite.Y) == cellY)
                 continue;
             if (kept != i) objects[kept] = sprite;
+            if (i == exitIndex) exitIndex = kept;
             kept++;
         }
         CollectedEnergyCells += active.Length - kept;
+        if (IsExitActive) LightExit();
         return kept != active.Length;
+    }
+
+    private void LightExit() =>
+        objects[exitIndex] = objects[exitIndex] with { Texture = WorldSprite.ActiveExitTexture };
+
+    public bool TryCompleteLevel(PlayerState player)
+    {
+        if (IsCompleted || !IsExitActive) return false;
+        var exit = objects[exitIndex];
+        if (Math.Floor(player.X) != Math.Floor(exit.X) || Math.Floor(player.Y) != Math.Floor(exit.Y))
+            return false;
+        IsCompleted = true;
+        return true;
     }
 
     /// <summary>

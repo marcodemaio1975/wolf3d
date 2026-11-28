@@ -15,7 +15,7 @@ internal sealed class DemoForm : Form
     private const int FrameWidth = 320;
     private const int FrameHeight = 200;
     private const double HorizontalFov = 70 * Math.PI / 180;
-    private readonly GridMap map;
+    private GridMap map;
     private PlayerState player;
     private readonly HashSet<Keys> pressed = new();
     private readonly Timer timer = new() { Interval = 16 };
@@ -31,9 +31,9 @@ internal sealed class DemoForm : Form
         Location = new Point(8, 8), Padding = new Padding(4, 2, 4, 2)
     };
 
-    public DemoForm(GridMap map, PlayerState spawn)
+    public DemoForm(GridMap initialMap, PlayerState spawn)
     {
-        this.map = map;
+        map = initialMap;
         player = spawn;
         frame = new Bitmap(FrameWidth, FrameHeight, FrameWidth * sizeof(uint),
             PixelFormat.Format32bppArgb, Marshal.UnsafeAddrOfPinnedArrayElement(pixels, 0));
@@ -42,15 +42,17 @@ internal sealed class DemoForm : Form
         BackColor = Color.Black;
         DoubleBuffered = true;
         ResizeRedraw = true;
-        energyIndicator.Visible = map.TotalEnergyCells > 0;
         Controls.Add(energyIndicator);
         UpdateEnergyIndicator();
 
         KeyDown += (_, e) =>
         {
             if (e.KeyCode == Keys.Escape) Close();
-            else if (pressed.Add(e.KeyCode) && e.KeyCode == Keys.E)
-                map.TryToggleDoor(player);
+            else if (pressed.Add(e.KeyCode))
+            {
+                if (map.IsCompleted && e.KeyCode == Keys.R) Replay();
+                else if (!map.IsCompleted && e.KeyCode == Keys.E) map.TryToggleDoor(player);
+            }
         };
         KeyUp += (_, e) => pressed.Remove(e.KeyCode);
         Deactivate += (_, _) => pressed.Clear();
@@ -61,7 +63,14 @@ internal sealed class DemoForm : Form
             var input = new MovementInput(Axis(Keys.W, Keys.S), Axis(Keys.D, Keys.A),
                 Axis(Keys.Right, Keys.Left));
             player = PlayerMovement.Update(map, player, input, dt);
-            if (map.CollectEnergyCells(player)) UpdateEnergyIndicator();
+            bool collected = map.CollectEnergyCells(player);
+            bool completed = map.TryCompleteLevel(player);
+            if (completed)
+            {
+                timer.Stop();
+                clock.Reset();
+            }
+            if (collected || completed) UpdateEnergyIndicator();
             RenderFrame();
         };
         Shown += (_, _) =>
@@ -85,8 +94,29 @@ internal sealed class DemoForm : Form
         Invalidate();
     }
 
-    private void UpdateEnergyIndicator() =>
-        energyIndicator.Text = $"Energia: {map.CollectedEnergyCells}/{map.TotalEnergyCells}";
+    private void UpdateEnergyIndicator()
+    {
+        energyIndicator.Visible = map.TotalEnergyCells > 0 || map.IsExitActive;
+        string energy = map.TotalEnergyCells > 0 ? $"Energia: {map.CollectedEnergyCells}/{map.TotalEnergyCells}" : "";
+        string status = map.IsCompleted ? "Livello completato   R per rigiocare · Esc per uscire" :
+            map.IsExitActive ? "Uscita attiva" : "";
+        energyIndicator.Text = energy.Length > 0 && status.Length > 0 ? energy + Environment.NewLine + status : energy + status;
+    }
+
+    private void Replay()
+    {
+        if (Program.LoadLevel() is not { } level)
+        {
+            Close();
+            return;
+        }
+        (map, player) = level;
+        pressed.Clear();
+        UpdateEnergyIndicator();
+        RenderFrame();
+        clock.Restart();
+        timer.Start();
+    }
 
     protected override void OnPaint(PaintEventArgs e)
     {
